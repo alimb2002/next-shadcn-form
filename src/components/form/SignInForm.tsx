@@ -4,7 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-// import { toast } from "@/components/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,34 +17,35 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-
-const FormSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z
-    .string()
-    .min(1, "password is required")
-    .min(8, "password must have at least 8 characters"),
-});
+import { signIn } from "next-auth/react";
+import { signInFormSchema } from "@/types/schema";
+import { useRouter } from "next/navigation";
 
 const SignInForm = () => {
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof signInFormSchema>>({
+    resolver: zodResolver(signInFormSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data);
-    // toast({
-    //   title: "You submitted the following values:",
-    //   description: (
-    //     <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-    //       <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-    //     </pre>
-    //   ),
-    // });
+  async function onSubmit(data: z.infer<typeof signInFormSchema>) {
+    const signInData = await signIn("credentials", {
+      email: data.email,
+      password: data.password,
+    });
+
+    if (signInData?.error) {
+      // toast({
+      //   title: "Error",
+      //   description: "oops something went wrong",
+      // });
+      console.log(signInData.error);
+    }
   }
 
   return (
@@ -55,9 +57,9 @@ const SignInForm = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="email" {...field} />
+                  <Input type="email" placeholder="email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -70,7 +72,7 @@ const SignInForm = () => {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="password" {...field} />
+                  <Input type="password" placeholder="password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

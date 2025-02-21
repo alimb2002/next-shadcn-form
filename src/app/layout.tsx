@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import { Toaster } from "@/components/ui/toaster";
 
 const robotoFont = Roboto({
   weight: ["300", "400", "500"],
@@ -26,6 +27,7 @@ export default function RootLayout({
           <Navbar />
           {children}
         </main>
+        <Toaster />
       </body>
     </html>
   );

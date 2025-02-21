@@ -1,10 +1,10 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-// import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,33 +16,38 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-
-const FormSchema = z
-  .object({
-    username: z.string().min(1, "User name is required").max(30),
-    email: z.string().email("Invalid email address"),
-    password: z
-      .string()
-      .min(1, "password is required")
-      .min(8, "password must have at least 8 characters"),
-    conformPassword: z.string().min(1, "confirm password is required"),
-  })
-  .refine((data) => data.password === data.conformPassword, {
-    path: ["confirmPassword"],
-    message: "confirm password do not match",
-  });
+import { SignUpFormSchema } from "@/types/schema";
 
 const SignUpForm = () => {
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const router = useRouter();
+  const form = useForm<z.infer<typeof SignUpFormSchema>>({
+    resolver: zodResolver(SignUpFormSchema),
     defaultValues: {
+      username: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data);
+  async function onSubmit(data: z.infer<typeof SignUpFormSchema>) {
+    const response = await fetch("/api/user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: data.username,
+        email: data.email,
+        password: data.password,
+      }),
+    });
+
+    if (response.ok) {
+      router.push("/signin");
+    } else {
+      console.log("registration failed");
+    }
   }
 
   return (
@@ -90,13 +95,13 @@ const SignUpForm = () => {
           />
           <FormField
             control={form.control}
-            name="conformPassword"
+            name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>conformPassword</FormLabel>
+                <FormLabel>confirmPassword</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="conformPassword"
+                    placeholder="confirmPassword"
                     {...field}
                     type="password"
                   />
